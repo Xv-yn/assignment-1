@@ -45,6 +45,6 @@ def load_orl(data_root, reduce=3):
 
 
 def load_yaleb(data_root, reduce=4):
-    # yaleB39 holds the 64 ambient-light captures (not a real subject)
-    return load_dataset(os.path.join(data_root, 'CroppedYaleB'), reduce=reduce,
-                        exclude_dirs={'yaleB39'})
+    # Extended YaleB has 38 subjects: yaleB01-13 and yaleB15-39.
+    # Ambient captures are already skipped by load_dataset via the filename check.
+    return load_dataset(os.path.join(data_root, 'CroppedYaleB'), reduce=reduce)
