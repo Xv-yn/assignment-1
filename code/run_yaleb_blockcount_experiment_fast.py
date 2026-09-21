@@ -26,7 +26,7 @@ import numpy as np
 
 from algorithm.data_io import load_yaleb
 from algorithm.noise import occlusion_noise
-from algorithm.evaluate import relative_reconstruction_error
+from algorithm.evaluate import clustering_metrics, relative_reconstruction_error
 from algorithm import ALGORITHMS
 
 
@@ -73,15 +73,19 @@ def run(args):
     print(f"Image size after resize: {height}x{width}")
     print(f"Fixed block size: {args.block_size}")
 
-    reused_path = out_dir / "yaleb_blocksize_raw.csv"
-    rows = _read_reused_rows(reused_path, args.block_size)
-    print(
-        f"Reused {len(rows)} existing rows for n_blocks=1 "
-        f"from {reused_path}"
-    )
-
-    # Only compute the missing block-count settings.
-    missing_counts = [b for b in args.block_counts if b != 1]
+    if args.include_clustering:
+        rows = []
+        missing_counts = list(args.block_counts)
+        print("Clustering metrics requested; recomputing all block-count settings.")
+    else:
+        reused_path = out_dir / "yaleb_blocksize_raw.csv"
+        rows = _read_reused_rows(reused_path, args.block_size)
+        print(
+            f"Reused {len(rows)} existing rows for n_blocks=1 "
+            f"from {reused_path}"
+        )
+        # Only compute the missing block-count settings.
+        missing_counts = [b for b in args.block_counts if b != 1]
 
     for run_id in range(args.runs):
         subset_rng = np.random.default_rng(args.seed + run_id)
@@ -120,16 +124,20 @@ def run(args):
                     verbose=False,
                 )
 
-                rre = float(relative_reconstruction_error(V_clean, W, H))
-                rows.append({
+                row = {
                     "run": run_id,
                     "block_size": args.block_size,
                     "n_blocks": n_blocks,
                     "algorithm": alg_name,
-                    "rre": rre,
+                    "rre": float(relative_reconstruction_error(V_clean, W, H)),
                     "iterations": info["iterations"],
                     "seconds": info["seconds"],
-                })
+                }
+                if args.include_clustering:
+                    acc, nmi = clustering_metrics(H, Y_sub, seed=args.seed + run_id)
+                    row["accuracy"] = float(acc)
+                    row["nmi"] = float(nmi)
+                rows.append(row)
 
     rows.sort(key=lambda r: (r["run"], r["n_blocks"], r["algorithm"]))
 
@@ -148,7 +156,7 @@ def run(args):
                 if r["n_blocks"] == n_blocks and r["algorithm"] == alg_name
             ])
 
-            summary.append({
+            item = {
                 "block_size": args.block_size,
                 "n_blocks": n_blocks,
                 "algorithm": alg_name,
@@ -156,7 +164,29 @@ def run(args):
                 "std_rre": (
                     float(values.std(ddof=1)) if len(values) > 1 else 0.0
                 ),
-            })
+            }
+            if args.include_clustering:
+                acc_values = np.array([
+                    r["accuracy"]
+                    for r in rows
+                    if r["n_blocks"] == n_blocks and r["algorithm"] == alg_name
+                ])
+                nmi_values = np.array([
+                    r["nmi"]
+                    for r in rows
+                    if r["n_blocks"] == n_blocks and r["algorithm"] == alg_name
+                ])
+                item.update({
+                    "mean_accuracy": float(acc_values.mean()),
+                    "std_accuracy": (
+                        float(acc_values.std(ddof=1)) if len(acc_values) > 1 else 0.0
+                    ),
+                    "mean_nmi": float(nmi_values.mean()),
+                    "std_nmi": (
+                        float(nmi_values.std(ddof=1)) if len(nmi_values) > 1 else 0.0
+                    ),
+                })
+            summary.append(item)
 
     summary_csv = out_dir / "yaleb_blockcount_summary.csv"
     with summary_csv.open("w", newline="", encoding="utf-8") as f:
@@ -229,6 +259,8 @@ if __name__ == "__main__":
         nargs="+",
         default=[1, 2, 3],
     )
+    parser.add_argument("--include-clustering", action="store_true",
+                        help="also compute accuracy and NMI from H via K-means")
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--sample-fraction", type=float, default=0.90)
     parser.add_argument("--max-iter", type=int, default=300)

@@ -25,7 +25,7 @@ import numpy as np
 
 from algorithm.data_io import load_orl
 from algorithm.noise import occlusion_noise
-from algorithm.evaluate import relative_reconstruction_error
+from algorithm.evaluate import clustering_metrics, relative_reconstruction_error
 from algorithm import ALGORITHMS
 
 
@@ -80,16 +80,20 @@ def run(args):
                     verbose=False,
                 )
 
-                rre = float(relative_reconstruction_error(V_clean, W, H))
-                rows.append({
+                row = {
                     "run": run_id,
                     "block_size": args.block_size,
                     "n_blocks": n_blocks,
                     "algorithm": alg_name,
-                    "rre": rre,
+                    "rre": float(relative_reconstruction_error(V_clean, W, H)),
                     "iterations": info["iterations"],
                     "seconds": info["seconds"],
-                })
+                }
+                if args.include_clustering:
+                    acc, nmi = clustering_metrics(H, Y_sub, seed=args.seed + run_id)
+                    row["accuracy"] = float(acc)
+                    row["nmi"] = float(nmi)
+                rows.append(row)
 
     raw_csv = out_dir / "orl_blockcount_raw.csv"
     with raw_csv.open("w", newline="") as f:
@@ -106,7 +110,7 @@ def run(args):
                 if r["n_blocks"] == n_blocks and r["algorithm"] == alg_name
             ])
 
-            summary.append({
+            item = {
                 "block_size": args.block_size,
                 "n_blocks": n_blocks,
                 "algorithm": alg_name,
@@ -114,7 +118,29 @@ def run(args):
                 "std_rre": (
                     float(values.std(ddof=1)) if len(values) > 1 else 0.0
                 ),
-            })
+            }
+            if args.include_clustering:
+                acc_values = np.array([
+                    r["accuracy"]
+                    for r in rows
+                    if r["n_blocks"] == n_blocks and r["algorithm"] == alg_name
+                ])
+                nmi_values = np.array([
+                    r["nmi"]
+                    for r in rows
+                    if r["n_blocks"] == n_blocks and r["algorithm"] == alg_name
+                ])
+                item.update({
+                    "mean_accuracy": float(acc_values.mean()),
+                    "std_accuracy": (
+                        float(acc_values.std(ddof=1)) if len(acc_values) > 1 else 0.0
+                    ),
+                    "mean_nmi": float(nmi_values.mean()),
+                    "std_nmi": (
+                        float(nmi_values.std(ddof=1)) if len(nmi_values) > 1 else 0.0
+                    ),
+                })
+            summary.append(item)
 
     summary_csv = out_dir / "orl_blockcount_summary.csv"
     with summary_csv.open("w", newline="") as f:
@@ -192,6 +218,8 @@ if __name__ == "__main__":
         nargs="+",
         default=[1, 2, 3],
     )
+    parser.add_argument("--include-clustering", action="store_true",
+                        help="also compute accuracy and NMI from H via K-means")
     parser.add_argument("--block-size", type=int, default=10)
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--sample-fraction", type=float, default=0.90)
