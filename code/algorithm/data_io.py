@@ -1,27 +1,40 @@
-"""Dataset loading utilities for ORL and Extended YaleB face datasets."""
+"""Dataset loading utilities for the ORL and Extended YaleB face datasets.
+
+The loaders return the data in the column-stacked convention used
+throughout the assignment: ``V`` has one *column per image* and one row
+per pixel, so that a factorisation ``V ~= WH`` reads as "``W`` holds the
+parts-based basis images, ``H`` holds each image's coefficients".
+"""
 import os
-from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
+#: image geometry after the default downscaling, as (height, width)
+ORL_SHAPE = (112, 92)
+YALEB_SHAPE = (192, 168)
+
 
 def resolve_data_root(data_root):
-    """Return the directory that directly contains ORL and CroppedYaleB.
+    """Accept either ``.../data`` or a folder that merely *contains* it.
 
-    Some local copies unpack the datasets as ``data/ORL`` and
-    ``data/CroppedYaleB``; this repository currently has them under
-    ``data/data``. Accepting both layouts keeps every experiment script usable
-    with either the assignment grader's layout or the checked-out repo layout.
+    The repository has historically been run with ``--data-root ../data``
+    and with ``--data-root ../data/data``, which silently produced
+    FileNotFoundError for half the scripts.  Resolving the path once,
+    here, removes that whole class of "it works on my machine" failure.
     """
-    root = Path(data_root)
-    candidates = [root, root / "data"]
-    for candidate in candidates:
-        if (candidate / "ORL").is_dir() and (candidate / "CroppedYaleB").is_dir():
-            return str(candidate)
+    candidates = [
+        data_root,
+        os.path.join(data_root, 'data'),
+    ]
+    for cand in candidates:
+        if (os.path.isdir(os.path.join(cand, 'ORL'))
+                or os.path.isdir(os.path.join(cand, 'CroppedYaleB'))):
+            return cand
     raise FileNotFoundError(
-        "Could not find ORL and CroppedYaleB under "
-        f"{root!s} or {root / 'data'!s}."
+        f"Could not find 'ORL' or 'CroppedYaleB' under {data_root!r} "
+        f"(also tried {os.path.join(data_root, 'data')!r}). "
+        "Copy the two dataset folders into code/data/ or pass --data-root."
     )
 
 
@@ -38,20 +51,16 @@ def load_dataset(root, reduce=3, normalize=True, exclude_dirs=()):
         V: float64 array (n_pixels, n_images), data matrix.
         Y: int array (n_images,), class label per image (subject index).
     """
-    root = Path(root)
-    if not root.is_dir():
-        raise FileNotFoundError(f"Dataset directory not found: {root}")
-
     images, labels = [], []
     subject_dirs = [d for d in sorted(os.listdir(root))
-                    if os.path.isdir(root / d)
+                    if os.path.isdir(os.path.join(root, d))
                     and d not in exclude_dirs]
     for i, person in enumerate(subject_dirs):
-        person_dir = root / person
+        person_dir = os.path.join(root, person)
         for fname in sorted(os.listdir(person_dir)):
             if not fname.endswith('.pgm') or 'ambient' in fname.lower():
                 continue
-            img = Image.open(person_dir / fname).convert('L')
+            img = Image.open(os.path.join(person_dir, fname)).convert('L')
             if reduce > 1:
                 w, h = img.size
                 img = img.resize((w // reduce, h // reduce))
@@ -59,7 +68,7 @@ def load_dataset(root, reduce=3, normalize=True, exclude_dirs=()):
             images.append(arr)
             labels.append(i)
     if not images:
-        raise ValueError(f"No .pgm face images found under {root}")
+        raise FileNotFoundError(f'no .pgm images found under {root!r}')
     V = np.concatenate(images, axis=1)
     if normalize:
         V = V / 255.0
@@ -67,11 +76,52 @@ def load_dataset(root, reduce=3, normalize=True, exclude_dirs=()):
 
 
 def load_orl(data_root, reduce=3):
-    return load_dataset(Path(resolve_data_root(data_root)) / 'ORL', reduce=reduce)
+    root = resolve_data_root(data_root)
+    return load_dataset(os.path.join(root, 'ORL'), reduce=reduce)
 
 
 def load_yaleb(data_root, reduce=4):
-    # Extended YaleB has 38 subjects: yaleB01-13 and yaleB15-39.
-    # Ambient captures are already skipped by load_dataset via the filename check.
-    return load_dataset(Path(resolve_data_root(data_root)) / 'CroppedYaleB',
-                        reduce=reduce)
+    """Load the Extended YaleB dataset: 2414 images of 38 subjects.
+
+    The subject folders are yaleB01-yaleB13 and yaleB15-yaleB39 (there is
+    no yaleB14), i.e. 38 folders.  Each folder holds 64 illumination
+    captures plus exactly one ``*Ambient.pgm`` frame, which is the
+    ambient-light reference rather than a face capture and is excluded by
+    ``load_dataset``; 38 * 65 - 38 = 2414, matching the count quoted in
+    the assignment brief.
+
+    NOTE: an earlier version of this loader excluded the whole ``yaleB39``
+    folder on the assumption that it held the ambient captures.  It does
+    not -- it is a genuine 38th subject -- so that version silently
+    trained on 2350 images of 37 classes.  Every number produced before
+    this fix is therefore for a different dataset than the brief
+    specifies and had to be recomputed.
+    """
+    root = resolve_data_root(data_root)
+    return load_dataset(os.path.join(root, 'CroppedYaleB'), reduce=reduce)
+
+
+def image_shape(dataset, reduce):
+    """Post-downscale (height, width) for a dataset name."""
+    base = {'orl': ORL_SHAPE, 'yaleb': YALEB_SHAPE}[dataset]
+    return base[0] // reduce, base[1] // reduce
+
+
+#: dataset name -> (loader, default reduce factor)
+DATASETS = {
+    'orl': (load_orl, 3),
+    'yaleb': (load_yaleb, 4),
+}
+
+
+def load(dataset, data_root, reduce=None):
+    """Load a dataset by name. Returns (V, Y, height, width)."""
+    loader, default_reduce = DATASETS[dataset]
+    reduce = default_reduce if reduce is None else reduce
+    V, Y = loader(data_root, reduce=reduce)
+    height, width = image_shape(dataset, reduce)
+    if V.shape[0] != height * width:
+        raise ValueError(
+            f'{dataset}: expected {height * width} pixels per image, '
+            f'got {V.shape[0]}')
+    return V, Y, height, width

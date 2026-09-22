@@ -1,5 +1,14 @@
-numpy
-scipy
-scikit-learn
-matplotlib
-pillow
+# Core: the NMF implementations use numpy and the standard library only.
+numpy>=1.21
+
+# Evaluation only (permitted by the brief for evaluation):
+#   scipy        -> Hungarian matching in algorithm/evaluate.py
+#   scikit-learn -> K-means, accuracy, NMI in algorithm/evaluate.py
+scipy>=1.7
+scikit-learn>=1.0
+
+# Data loading and plotting only:
+#   pillow     -> decoding .pgm images in algorithm/data_io.py
+#   matplotlib -> figures produced by the run_*/make_* scripts
+pillow>=8.0
+matplotlib>=3.4
