@@ -43,6 +43,19 @@ from algorithm.nmf_l1 import nmf_l1  # noqa: E402
 from algorithm.nmf_l1_reg import nmf_l1_reg  # noqa: E402
 from algorithm.noise import occlusion_noise  # noqa: E402
 
+#: iteration budget used to produce every number in the report.  These are the
+#: values run_all.sh passes; making them the DEFAULT means a bare
+#: `python <script>.py --dataset orl` reproduces the committed results instead
+#: of silently running a shorter, different experiment.
+REPORT_MAX_ITER = {'orl': 400, 'yaleb': 250}
+
+
+def resolve_max_iter(args):
+    if args.max_iter is None:
+        args.max_iter = REPORT_MAX_ITER[args.dataset]
+    return args
+
+
 STUDIES = {
     'delta': (r'L1-NMF smoothing constant $\delta$', True),
     'scale': (r'Hypersurface transition scale $c$', True),
@@ -158,10 +171,11 @@ if __name__ == '__main__':
     p.add_argument('--fraction', type=float, default=1.0)
     p.add_argument('--runs', type=int, default=3)
     p.add_argument('--sample-fraction', type=float, default=0.90)
-    p.add_argument('--max-iter', type=int, default=300)
+    p.add_argument('--max-iter', type=int, default=None,
+                   help='iterations used for the reported results: 400 (ORL), 250 (YaleB)')
     p.add_argument('--tol', type=float, default=1e-5)
     p.add_argument('--seed', type=int, default=2026)
-    args = p.parse_args()
+    args = resolve_max_iter(p.parse_args())
     if args.values is None:
         args.values = {
             'delta': [1e-5, 1e-4, 1e-3, 1e-2, 1e-1],

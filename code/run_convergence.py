@@ -41,6 +41,19 @@ from algorithm.evaluate import relative_reconstruction_error  # noqa: E402
 from algorithm.noise import occlusion_noise  # noqa: E402
 
 
+#: iteration budget used to produce every number in the report.  These are the
+#: values run_all.sh passes; making them the DEFAULT means a bare
+#: `python <script>.py --dataset orl` reproduces the committed results instead
+#: of silently running a shorter, different experiment.
+REPORT_MAX_ITER = {'orl': 400, 'yaleb': 250}
+
+
+def resolve_max_iter(args):
+    if args.max_iter is None:
+        args.max_iter = REPORT_MAX_ITER[args.dataset]
+    return args
+
+
 def run(args):
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -109,6 +122,7 @@ if __name__ == '__main__':
     p.add_argument('--fraction', type=float, default=1.0)
     p.add_argument('--k', type=int, default=None)
     p.add_argument('--sample-fraction', type=float, default=0.90)
-    p.add_argument('--max-iter', type=int, default=300)
+    p.add_argument('--max-iter', type=int, default=None,
+                   help='iterations used for the reported results: 400 (ORL), 250 (YaleB)')
     p.add_argument('--seed', type=int, default=2026)
-    run(p.parse_args())
+    run(resolve_max_iter(p.parse_args()))

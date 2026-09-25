@@ -1,4 +1,4 @@
-"""Algorithm 3: L2,1-norm based robust NMF (Ding, Li & Jordan, TPAMI 2010)
+"""Algorithm 4: L2,1-norm based robust NMF (Ding, Li & Jordan, TPAMI 2010)
 -- NOT taught in this course.
 
     min_{W,H >= 0}  ||V - WH||_{2,1}

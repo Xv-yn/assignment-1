@@ -24,7 +24,11 @@ b = 0 / n = 0 denote the uncontaminated control condition.
 Usage (run from the ``code/`` directory):
 
     python run_experiment.py --dataset orl   --data-root data
-    python run_experiment.py --dataset yaleb --data-root data --max-iter 200
+    python run_experiment.py --dataset yaleb --data-root data
+
+``--max-iter`` defaults to the budget used for the reported results
+(400 for ORL, 250 for Extended YaleB), so the bare commands above
+reproduce the committed CSVs.
 
 Outputs, under ``--output`` (default ``results/``):
     <dataset>_raw.csv                  one row per (run, condition, algorithm)
@@ -52,6 +56,19 @@ from algorithm.data_io import load  # noqa: E402
 from algorithm.evaluate import (  # noqa: E402
     clustering_metrics, relative_reconstruction_error)
 from algorithm.noise import corrupted_pixel_fraction, occlusion_noise  # noqa: E402
+
+#: iteration budget used to produce every number in the report.  These are the
+#: values run_all.sh passes; making them the DEFAULT means a bare
+#: `python <script>.py --dataset orl` reproduces the committed results instead
+#: of silently running a shorter, different experiment.
+REPORT_MAX_ITER = {'orl': 400, 'yaleb': 250}
+
+
+def resolve_max_iter(args):
+    if args.max_iter is None:
+        args.max_iter = REPORT_MAX_ITER[args.dataset]
+    return args
+
 
 # ---------------------------------------------------------------- sweeps
 
@@ -298,7 +315,8 @@ def main():
     p.add_argument('--sample-fraction', type=float, default=0.90)
     p.add_argument('--k', type=int, default=None,
                    help='rank; default = number of classes in the subset')
-    p.add_argument('--max-iter', type=int, default=300)
+    p.add_argument('--max-iter', type=int, default=None,
+                   help='iterations used for the reported results: 400 (ORL), 250 (YaleB)')
     p.add_argument('--tol', type=float, default=1e-5)
     p.add_argument('--seed', type=int, default=2026)
     p.add_argument('--include-clustering', action='store_true',
@@ -307,7 +325,7 @@ def main():
                         'computed by default here, so this is a no-op.')
     p.add_argument('--skip-clustering', action='store_true',
                    help='skip K-means Acc/NMI (RRE only); much faster')
-    run(p.parse_args())
+    run(resolve_max_iter(p.parse_args()))
 
 
 if __name__ == '__main__':

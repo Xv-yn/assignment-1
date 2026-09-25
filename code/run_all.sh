@@ -7,7 +7,7 @@
 #     bash run_all.sh                 # uses code/data
 #     DATA_ROOT=../data bash run_all.sh
 #
-# Wall clock on a 2-core cloud VM: ~20 min for ORL, ~3 h for YaleB.
+# Wall clock: ~20 min for ORL, ~1-1.5 h for Extended YaleB.
 # Pass FAST=1 to run a reduced grid (fewer iterations) for a quick check.
 set -euo pipefail
 
@@ -37,6 +37,7 @@ echo "=== 4/8  ORL hyper-parameter sensitivity ==="
 $PY run_sensitivity.py  --study delta --dataset orl --data-root "$DATA_ROOT" --output "$OUT" --max-iter "$ITER_ORL"
 $PY run_sensitivity.py  --study lam   --dataset orl --data-root "$DATA_ROOT" --output "$OUT" --max-iter "$ITER_ORL"
 $PY run_sensitivity.py  --study rank  --dataset orl --data-root "$DATA_ROOT" --output "$OUT" --max-iter "$ITER_ORL"
+$PY run_sensitivity.py  --study scale --dataset orl --data-root "$DATA_ROOT" --output "$OUT" --max-iter "$ITER_ORL"
 
 echo "=== 5/8  Extended YaleB qualitative figures ==="
 $PY make_figures.py     --dataset yaleb --data-root "$DATA_ROOT" --output "$OUT" --max-iter "$ITER_YALE"
@@ -46,6 +47,9 @@ $PY run_experiment.py   --dataset yaleb --data-root "$DATA_ROOT" --output "$OUT"
 
 echo "=== 7/8  Extended YaleB convergence ==="
 $PY run_convergence.py  --dataset yaleb --data-root "$DATA_ROOT" --output "$OUT" --max-iter "$ITER_YALE"
+
+echo "=== 8/8  regenerate the report's LaTeX tables ==="
+$PY make_tables.py --results "$OUT" --out ../report/tables
 
 echo
 echo "All done. Results in $OUT/"
