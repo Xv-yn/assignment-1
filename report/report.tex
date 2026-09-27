@@ -272,23 +272,35 @@ controlled size, count and prevalence, which of them actually recovers the
 clean signal, by how much, and --- the question that turns out to matter most
 --- \emph{under which corruption geometry} does each one help at all?
 
+\subsection{Overview of the approach}
+The five algorithms differ in the granularity at which they respond to a large
+residual: Frobenius NMF is the least-squares baseline; $L_1$-NMF and
+hypersurface-cost NMF down-weight pixels; $L_{2,1}$-NMF down-weights images;
+and the robust model gives corruption its own sparse outlier variable. We test
+whether robustness helps when this granularity matches the corruption pattern.
+Four algorithms extend beyond the course methods; Frobenius NMF is the taught
+baseline.
+
 \subsection{Contributions}
 This report makes the following contributions.
 \begin{enumerate}\itemsep0pt
-  \item We implement five NMF algorithms from scratch using only NumPy and
-        the Python standard library, and derive all five as instances of a
-        single majorise--minimise (MM) template, which isolates their only
-        real difference: \emph{at what granularity each one down-weights a
-        residual} (Section~\ref{sec:methods}).
-  \item We identify and correct a subtlety that is easy to miss in this
-        experimental design: a column-wise robust loss such as
-        $L_{2,1}$ can only distinguish clean from corrupted samples if the
-        corruption is \emph{unevenly distributed across samples}. We
-        therefore add the contamination \emph{ratio} as a third noise axis
-        (Section~\ref{sec:noise}).
+  \item We implement five NMF algorithms from scratch using NumPy and the
+        Python standard library, and derive them from one majorise--minimise
+        (MM) template, isolating the granularity at which each down-weights a
+        residual (Section~\ref{sec:methods}).
+  \item We show that a column-wise robust loss such as $L_{2,1}$ can
+        distinguish clean from corrupted samples only when corruption is
+        \emph{unevenly distributed across samples}; hence contamination ratio
+        is a third noise axis (Section~\ref{sec:noise}).
   \item We report a rigorous evaluation --- three metrics, five independent
         $90\%$ subsamples, and an explicit convergence study --- on both
         required datasets (Section~\ref{sec:experiments}).
+  \item We show that the hypersurface cost's published unit scale is almost
+        quadratic on data normalised to $[0,1]$, so its scale parameter must be
+        chosen relative to the pixel range rather than copied unchanged.
+  \item We use sensitivity sweeps to show that the main conclusions survive
+        reasonable choices of the smoothing, hypersurface-scale, outlier-
+        penalty and rank parameters.
 \end{enumerate}
 
 %==============================================================
@@ -677,8 +689,8 @@ properties of the corruption:
         ($b=0$ is the uncorrupted control);
   \item the \textbf{number of blocks} per image $\in \{0,1,2,3,4\}$ at $b=10$;
   \item the \textbf{contamination ratio}, i.e.\ the fraction of images that
-        are corrupted at all, $\in \{0.1, 0.25, 0.5, 0.75, 1.0\}$ at $b=10$
-        with one block.
+        are corrupted at all, $\in \{0.1, 0.25, 0.5, 0.75, 1.0\}$ at $b=15$
+        with two blocks per corrupted image.
 \end{enumerate}
 The first two axes are named in the brief. The third is ours, and it is not
 cosmetic: axes 1--2 change \emph{how many pixels} are corrupted while keeping
@@ -761,6 +773,35 @@ $\{0.1, 0.25, 0.5, 0.75, 1.0\}$, at a fixed $b=15$ with $2$ blocks per
 corrupted image. Blocks are square, filled with the saturated value $1.0$,
 placed uniformly at random, and allowed to overlap.
 
+\begin{table}[tbp]
+  \centering
+  \caption{Representative realised fractions of modified pixels, measured
+           from the generated masks; overlap can reduce them below nominal
+           block area.}
+  \label{tab:pixel-fractions}
+  \scriptsize
+  \setlength{\tabcolsep}{3.5pt}
+  \renewcommand{\arraystretch}{0.9}
+  \begin{tabular}{lcc}
+    \toprule
+    Condition & ORL & Extended YaleB \\
+    \midrule
+    $b=5$, 1 block & 2.3\% & 1.2\% \\
+    $b=10$, 1 block & 9.0\% & 5.0\% \\
+    $b=15$, 1 block & 20.3\% & 11.1\% \\
+    $b=20$, 1 block & 36.0\% & 19.8\% \\
+    $b=10$, 2 blocks & 16.9\% & 9.6\% \\
+    $b=10$, 4 blocks & 29.8\% & 18.0\% \\
+    $b=15$, 2 blocks & 34.0\% & 20.4\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Datasets.} We use the ORL face database
+\citep{samaria1994parameterisation} and Extended YaleB
+\citep{georghiades2001few,lee2005acquiring}; their pre-processed dimensions
+are shown in Table~\ref{tab:datasets}.
+
 \paragraph{Protocol.} Following the note in the brief, every condition is
 repeated over $R=5$ independent random subsamples of $90\%$ of the images, and
 we report mean and standard deviation across those repeats. The subsample for repeat $r$ is drawn once and \emph{shared by all
@@ -770,9 +811,11 @@ is $k = $ the number of classes present in the subsample ($40$ for ORL, $38$
 for YaleB). Multiplicative updates run for at most $400$ iterations on ORL and
 $250$ on YaleB, with an early stop when the relative change in the objective
 falls below $\tau = 10^{-5}$; the convergence study in
-Section~\ref{sec:convergence} justifies these budgets. Factors are initialised
-from a fixed-seed uniform distribution, and the seed is a deterministic
-function of (repeat, condition), so the entire grid is reproducible with
+Section~\ref{sec:convergence} justifies these budgets. The subsample and factor
+initialisation are seeded by repeat, while the noise seed is a deterministic
+function of the repeat and noise condition. Thus every condition within a
+repeat starts from the same factors and uses the same reproducible noise
+construction, and the entire grid is reproducible with
 \texttt{bash run\_all.sh}.
 
 \paragraph{Metrics.} All three metrics of Section~\ref{sec:metrics} --- RRE
@@ -1348,6 +1391,8 @@ budget --- the main methodological limitation of this study.
 
 %==============================================================
 \appendix
+\tiny
+\setlength{\parskip}{0pt}
 \section{Contribution of each group member}
 % REQUIRED by the brief ("Indicate the contribution of each group member").
 % [H] (not [tbp]) so the table cannot drift out of the appendix into the
@@ -1370,52 +1415,27 @@ budget --- the main methodological limitation of this study.
 \section{How to run the code}
 % REQUIRED by the brief; omitting it costs 20 marks.
 \label{sec:howtorun}
-The submitted \texttt{code/} folder is organised as
-\begin{verbatim}
-code/
-  algorithm/        the five NMF implementations + noise, data I/O, metrics
-  data/             EMPTY -- copy ORL/ and CroppedYaleB/ in here
-  results/          CSVs and figures produced by the scripts
-  run_experiment.py run_convergence.py run_sensitivity.py make_figures.py
-  run_all.sh        reproduces every number and figure in this report
-  test_algorithms.py  self-checks; needs no dataset, runs in under a minute
-\end{verbatim}
-
-\paragraph{Environment.}
-Python 3.9 or newer. Install the dependencies with
+The submitted \texttt{code/} folder contains the five algorithms, data I/O,
+noise generation, metrics, experiment scripts, result files, and
+\texttt{test\_algorithms.py}. The \texttt{data/} directory is empty: copy
+the ORL and CroppedYaleB folders into \texttt{code/data/}.
 \begin{verbatim}
 pip install -r code/requirements.txt
 \end{verbatim}
-The NMF algorithms themselves import only NumPy and the Python standard
-library. SciPy and scikit-learn are used exclusively for evaluation
-($K$-means, accuracy, NMI, Hungarian matching); Pillow is used only to decode
-the \texttt{.pgm} files and Matplotlib only to draw figures.
-
-\paragraph{Data.}
-Copy the two dataset folders so that \texttt{code/data/ORL/} and
-\texttt{code/data/CroppedYaleB/} exist.
-
-\paragraph{Reproducing everything.}
+Python 3.9 or newer is required. SciPy and scikit-learn are used for
+evaluation, Pillow for \texttt{.pgm} files, and Matplotlib for figures.
+To reproduce all reported results:
 \begin{verbatim}
 cd code
 bash run_all.sh            # ~20 min (ORL) + ~3 h (Extended YaleB)
 FAST=1 bash run_all.sh     # reduced grid, a few minutes, for a smoke test
 \end{verbatim}
-
-\paragraph{Verifying the implementation.}
+The dataset-free implementation checks are run with:
 \begin{verbatim}
 cd code
 python test_algorithms.py
 \end{verbatim}
-This asserts that non-negativity is preserved, that each objective decreases
-monotonically (the property the MM derivations of
-Section~\ref{sec:methods} guarantee), that every algorithm recovers a
-synthetic rank-$k$ non-negative matrix, that the robust losses beat the
-Frobenius baseline on corrupted synthetic data, that the noise generator
-corrupts exactly the images and pixels it claims, and that all results are
-deterministic under a fixed seed. It requires no dataset.
-
-\paragraph{Running a single experiment.}
+For a single experiment or sensitivity study:
 \begin{verbatim}
 cd code
 python run_experiment.py  --dataset orl   --data-root data
@@ -1424,10 +1444,10 @@ python run_convergence.py --dataset orl   --data-root data
 python run_sensitivity.py --study delta --dataset orl --data-root data
 python make_figures.py    --dataset orl   --data-root data
 \end{verbatim}
-Every script writes its CSVs and PNGs into \texttt{results/} and accepts
-\texttt{-{}-help}. All randomness is seeded through \texttt{-{}-seed}
-(default \texttt{2026}), so the reported numbers are reproducible.
+Scripts write CSVs and PNGs into \texttt{results/}; all randomness is seeded
+through \texttt{-{}-seed} (default \texttt{2026}).
 
+\scriptsize
 \section{Additional results}
 The main text reports RRE for every condition. The corresponding clustering
 accuracy and normalised mutual information tables are produced by
@@ -1436,12 +1456,10 @@ accuracy and normalised mutual information tables are produced by
 deviation in this report are in \texttt{code/results/orl\_raw.csv} and
 \texttt{code/results/yaleb\_raw.csv}.
 
-\paragraph{Reproducibility.} Every experiment in this report was run twice, on
-two different machines with different BLAS implementations (a two-core cloud VM
-with OpenBLAS, and an Apple-silicon laptop with Accelerate). The RRE values
-agreed to four decimal places on every condition we compared, which is what we
-would expect from a deterministic implementation with fixed seeds and is a
-useful check that none of the conclusions depends on the numerical
-environment.
+\paragraph{Reproducibility.} We checked the main grids on a two-core
+OpenBLAS VM and an Apple-silicon Accelerate laptop. Four algorithms reproduced
+bit-for-bit; $L_1$-NMF varied slightly in some ill-conditioned cases because
+its IRLS weights grow near zero residuals. These variations do not affect the
+reported rankings or conclusions.
 
 \end{document}

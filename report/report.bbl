@@ -1,0 +1,121 @@
+\begin{thebibliography}{17}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Boutsidis and Gallopoulos(2008)]{boutsidis2008svd}
+Christos Boutsidis and Efstratios Gallopoulos.
+\newblock {SVD} based initialization: a head start for nonnegative matrix
+  factorization.
+\newblock \emph{Pattern Recognition}, 41\penalty0 (4):\penalty0 1350--1362,
+  2008.
+
+\bibitem[Cai et~al.(2011)Cai, He, Han, and Huang]{cai2011graph}
+Deng Cai, Xiaofei He, Jiawei Han, and Thomas~S. Huang.
+\newblock Graph regularized nonnegative matrix factorization for data
+  representation.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}, 33\penalty0 (8):\penalty0 1548--1560, 2011.
+
+\bibitem[Cand\`{e}s et~al.(2011)Cand\`{e}s, Li, Ma, and
+  Wright]{candes2011robust}
+Emmanuel~J. Cand\`{e}s, Xiaodong Li, Yi~Ma, and John Wright.
+\newblock Robust principal component analysis?
+\newblock \emph{Journal of the ACM}, 58\penalty0 (3):\penalty0 1--37, 2011.
+
+\bibitem[Ding et~al.(2006{\natexlab{a}})Ding, Li, Peng, and
+  Park]{ding2006orthogonal}
+Chris Ding, Tao Li, Wei Peng, and Haesun Park.
+\newblock Orthogonal nonnegative matrix tri-factorizations for clustering.
+\newblock In \emph{ACM SIGKDD International Conference on Knowledge Discovery
+  and Data Mining (KDD)}, pages 126--135, 2006{\natexlab{a}}.
+
+\bibitem[Ding et~al.(2006{\natexlab{b}})Ding, Zhou, He, and Zha]{ding2010rpca}
+Chris Ding, Ding Zhou, Xiaofeng He, and Hongyuan Zha.
+\newblock {R1-PCA}: rotational invariant {L1}-norm principal component analysis
+  for robust subspace factorization.
+\newblock \emph{Proceedings of the International Conference on Machine Learning
+  (ICML)}, pages 281--288, 2006{\natexlab{b}}.
+
+\bibitem[Georghiades et~al.(2001)Georghiades, Belhumeur, and
+  Kriegman]{georghiades2001few}
+Athinodoros~S. Georghiades, Peter~N. Belhumeur, and David~J. Kriegman.
+\newblock From few to many: illumination cone models for face recognition under
+  variable lighting and pose.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}, 23\penalty0 (6):\penalty0 643--660, 2001.
+\newblock The Extended Yale Face Database B.
+
+\bibitem[Hamza and Brady(2006)]{hamza2006reconstruction}
+A.~Ben Hamza and David~J. Brady.
+\newblock Reconstruction of reflectance spectra using robust nonnegative matrix
+  factorization.
+\newblock \emph{IEEE Transactions on Signal Processing}, 54\penalty0
+  (9):\penalty0 3637--3642, 2006.
+
+\bibitem[Hoyer(2004)]{hoyer2004nonnegative}
+Patrik~O. Hoyer.
+\newblock Non-negative matrix factorization with sparseness constraints.
+\newblock \emph{Journal of Machine Learning Research}, 5:\penalty0 1457--1469,
+  2004.
+
+\bibitem[Ke and Kanade(2005)]{ke2005robust}
+Qifa Ke and Takeo Kanade.
+\newblock Robust {L1} norm factorization in the presence of outliers and
+  missing data by alternative convex programming.
+\newblock In \emph{IEEE Conference on Computer Vision and Pattern Recognition
+  (CVPR)}, pages 739--746, 2005.
+
+\bibitem[Kong et~al.(2011)Kong, Ding, and Huang]{kong2011robust}
+Deguang Kong, Chris Ding, and Heng Huang.
+\newblock Robust nonnegative matrix factorization using {L21}-norm.
+\newblock In \emph{ACM International Conference on Information and Knowledge
+  Management (CIKM)}, pages 673--682, 2011.
+
+\bibitem[Lee and Seung(1999)]{lee1999learning}
+Daniel~D. Lee and H.~Sebastian Seung.
+\newblock Learning the parts of objects by non-negative matrix factorization.
+\newblock \emph{Nature}, 401\penalty0 (6755):\penalty0 788--791, 1999.
+
+\bibitem[Lee and Seung(2001)]{lee2001algorithms}
+Daniel~D. Lee and H.~Sebastian Seung.
+\newblock Algorithms for non-negative matrix factorization.
+\newblock In \emph{Advances in Neural Information Processing Systems (NIPS)},
+  pages 556--562, 2001.
+
+\bibitem[Lee et~al.(2005)Lee, Ho, and Kriegman]{lee2005acquiring}
+Kuang-Chih Lee, Jeffrey Ho, and David~J. Kriegman.
+\newblock Acquiring linear subspaces for face recognition under variable
+  lighting.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}, 27\penalty0 (5):\penalty0 684--698, 2005.
+
+\bibitem[Lin(2007)]{lin2007convergence}
+Chih-Jen Lin.
+\newblock On the convergence of multiplicative update algorithms for
+  nonnegative matrix factorization.
+\newblock \emph{IEEE Transactions on Neural Networks}, 18\penalty0
+  (6):\penalty0 1589--1596, 2007.
+
+\bibitem[Paatero and Tapper(1994)]{paatero1994positive}
+Pentti Paatero and Unto Tapper.
+\newblock Positive matrix factorization: a non-negative factor model with
+  optimal utilization of error estimates of data values.
+\newblock \emph{Environmetrics}, 5\penalty0 (2):\penalty0 111--126, 1994.
+
+\bibitem[Samaria and Harter(1994)]{samaria1994parameterisation}
+Ferdinando~S. Samaria and Andy~C. Harter.
+\newblock Parameterisation of a stochastic model for human face identification.
+\newblock In \emph{IEEE Workshop on Applications of Computer Vision}, pages
+  138--142, 1994.
+\newblock The ORL (AT\&T) face database.
+
+\bibitem[Zhang et~al.(2011)Zhang, Chen, Zheng, and He]{zhang2011robust}
+Lijun Zhang, Zhengguang Chen, Miao Zheng, and Xiaofei He.
+\newblock Robust non-negative matrix factorization.
+\newblock In \emph{Frontiers of Electrical and Electronic Engineering in
+  China}, volume~6, pages 192--200, 2011.
+
+\end{thebibliography}
