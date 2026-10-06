@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.9.27)  27 SEP 2026 22:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.9.27)  6 OCT 2026 11:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -801,11 +801,11 @@ Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: 77475D21C77A9C8F73FB2FE9C1AC7273;6924.
  ) 
 Here is how much of TeX's memory you used:
- 14234 strings out of 469296
- 223519 string characters out of 5465561
+ 14235 strings out of 469296
+ 223525 string characters out of 5465561
  676424 words of memory out of 6000000
  42682 multiletter control sequences out of 15000+600000
- 724841 words of font info for 212 fonts, out of 8000000 for 9000
+ 725919 words of font info for 213 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
  69i,15n,83p,1195b,574s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></us
@@ -820,7 +820,7 @@ ol/usyr.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/symbol/usyr.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive
 /texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fon
 ts/type1/urw/times/utmri8a.pfb>
-Output written on report.pdf (20 pages, 1668141 bytes).
+Output written on report.pdf (20 pages, 1668087 bytes).
 PDF statistics:
  515 PDF objects out of 1000 (max. 8388607)
  430 compressed objects within 5 object streams
